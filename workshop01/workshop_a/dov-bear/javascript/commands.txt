@@ -1,0 +1,6 @@
+docker rm $(docker ps -qa)
+docker rmi $(docker images --filter "dangling=true" -q --no-trunc)
+
+docker build -t jtang2567/workshop_a:v1.01 .
+
+docker run -d -p 8080:3000 -e PORT=3000 -e INSTANCE_NAME="wapp" -e INSTANCE_HASH="this-hash" --name wapp1 jtang2567/workshop_a:v1.01
