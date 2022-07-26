@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bgg-database-deploy
+  labels:
+    name: bgg-database-deploy
+spec:
+  selector:
+    matchLabels:
+      name: bgg-database-po
+  replicas: 1
+  template:
+    metadata:
+      name: bgg-database-po
+      labels:
+        name: bgg-database-po
+    spec:
+      containers:
+      - name: bgg-database
+        image: stackupiss/bgg-database:v1
+        imagePullPolicy: IfNotPresent
+ 
+
