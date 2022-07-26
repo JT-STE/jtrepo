@@ -1,0 +1,25 @@
+version: '3.3'
+services:
+    nwdb:
+        container_name: nwdb
+        volumes: 
+            - nwdb-vol:/var/lib/mysql
+        image: 'stackupiss/northwind-db:v1'
+
+    nwapp:
+        container_name: nwapp
+        environment:
+            - DB_HOST=nwdb
+            - DB_USER=root
+            - DB_PASSWORD=changeit
+        ports:
+            - '8080:3000'
+        image: 'stackupiss/northwind-app:v1'
+
+volumes:
+  nwdb-vol:
+
+networks:
+    default:
+        external:
+            name: mynet     
