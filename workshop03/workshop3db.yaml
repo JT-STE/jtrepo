@@ -1,0 +1,72 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+
+metadata:
+   name: bggdb-pvc
+   labels:
+      name: bggdb-pvc
+   annotations:
+      volume.beta.kubernetes.io/storage-provisioner: provisioner
+
+spec:
+   accessModes:
+   - ReadWriteOnce
+   resources:
+      requests:
+         storage: 1Gi
+   storageClassName: do-block-storage
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bggdb-deploy
+  labels:
+    name: bggdb-deploy
+spec:
+  selector:
+    matchLabels:
+      name: bggdb-po
+  replicas: 1
+  template:
+    metadata:
+      name: bggdb-po
+      labels:
+        name: bggdb-po
+    spec:
+      volumes: 
+      - name: bggdb-vol
+        persistentVolumeClaim:
+          claimName: bggdb-pvc
+
+      # initContainers:
+      # - name: pv-recycler
+      #   image: "gcr.io/google_containers/busybox"
+      #   command: ["/bin/sh", "-c", "test -e /scrub && rm -rf /scrub/..?* /scrub/.[!.]* /scrub/*  && test -z \"$(ls -A /scrub)\" || exit 1"]
+      #   volumeMounts:
+      #   - name: bggdb-vol
+      #     mountPath: /scrub
+
+      containers:
+      - name: bggdb
+        image: stackupiss/bgg-database:v1
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+          - name: bggdb-vol
+            mountPath: /var/lib/mysql
+        ports:
+        - containerPort: 3306
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bggdb-svc
+  labels:
+    name: bggdb-svc
+spec:
+  type: ClusterIP
+  selector:
+    name: bggdb-po
+  ports:
+  - port: 3306
+    targetPort: 3306
