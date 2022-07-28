@@ -1,0 +1,124 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: wordpress-db-secret
+  labels:
+    name: wordpress-db-secret
+type: Opaque
+data:
+  MYSQL_PASSWORD: Y2hhbmdlaXQ=
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wordpress-db-cm
+  labels:
+    name: wordpress-db-cm
+data:
+  MYSQL_DATABASE: wordpressdb
+  MYSQL_USER: user
+  # MYSQL_PASSWORD: examplepass
+  MYSQL_RANDOM_ROOT_PASSWORD: '1'
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+
+metadata:
+   name: wordpress-db-pvc
+   labels:
+      name: wordpress-db-pvc
+   annotations:
+      volume.beta.kubernetes.io/storage-provisioner: provisioner
+
+spec:
+   accessModes:
+   - ReadWriteOnce
+   resources:
+      requests:
+         storage: 1Gi
+   storageClassName: do-block-storage
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wordpress-db-sts
+  labels:
+    name: wordpress-db-sts
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: wordpress-db-deploy
+#   labels:
+#     name: wordpress-db-deploy
+spec:
+  selector:
+    matchLabels:
+      name: wordpress-db-po
+  replicas: 1
+  serviceName: wordpress-db-hsvc
+  volumeClaimTemplates:
+  - metadata:
+      name: wordpress-db-pvc
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: do-block-storage
+  template:
+    metadata:
+      name: wordpress-db-po
+      labels:
+        name: wordpress-db-po
+    spec:
+      # volumes: 
+      # - name: wordpress-db-vol
+      #   persistentVolumeClaim:
+      #     claimName: wordpress-db-pvc
+      containers:
+      - name: wordpress-db
+        image: mysql:5.7
+        args:
+          - "--ignore-db-dir=lost+found"
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+          - name: wordpress-db-pvc
+            mountPath: /var/lib/mysql
+        envFrom:
+        - configMapRef:
+            name: wordpress-db-cm
+        - secretRef:
+            name: wordpress-db-secret
+        ports:
+        - containerPort: 3306
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-db-svc
+  labels:
+    name: wordpress-db-svc
+spec:
+  type: ClusterIP
+  selector:
+    name: wordpress-db-po
+  ports:
+  - port: 3306
+    targetPort: 3306
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-db-hsvc
+  labels:
+    name: wordpress-db-hsvc
+spec:
+  clusterIP: None
+  selector:
+    name: wordpress-db-po
+  ports:
+  - port: 3306
+    targetPort: 3306

@@ -1,12 +1,13 @@
 #!/bin/env bash
 
 #create the namespace
-echo "Creating network"
+echo "Creating namespace"
 kubectl create ns ws3
+kubectl create ns ingress-nginx
 
 echo "create ingress-controller"
 #create ingress-controller
-helm install ingress-controller ingress-nginx/ingress-nginx -n ws3
+helm install ingress-controller ingress-nginx/ingress-nginx -n ingress-nginx
 
 echo "create db"
 #create db

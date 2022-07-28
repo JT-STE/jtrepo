@@ -1,0 +1,68 @@
+# ---
+# apiVersion: networking.k8s.io/v1 
+# kind: NetworkPolicy 
+# metadata:
+#   name: deny-all
+#   labels:
+#     name: deny-all
+# spec: 
+#   podSelector:
+#     matchLabels: 
+#       name: wordpress-po
+#   policyTypes:
+#   - Ingress 
+#   - Egress
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wordpress-netpol
+  labels:
+    name: wordpress-netpol
+spec:
+  podSelector:
+    matchLabels:
+      name: wordpress-po 
+  policyTypes: 
+  - Ingress 
+  # - Egress
+  ingress:
+  - from: 
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: ingress-nginx
+      podSelector:
+        matchExpressions:
+        - key: app.kubernetes.io/component
+          operator: In
+          values: 
+          - controller
+        - key: app.kubernetes.io/instance
+          operator: In
+          values: 
+          - ingress-controller
+        - key: app.kubernetes.io/name
+          operator: In
+          values:
+          - ingress-nginx
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wordpress-db-netpol
+  labels:
+    name: wordpress-db-netpol
+spec:
+  podSelector:
+    matchLabels:
+      name: wordpress-db-po
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          name: wordpress-po
+    ports:
+    - port: 3306

@@ -1,0 +1,116 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: wordpress-secret
+  labels:
+    name: wordpress-secret
+type: Opaque
+data:
+  WORDPRESS_DB_PASSWORD: Y2hhbmdlaXQ=
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wordpress-cm
+  labels:
+    name: wordpress-cm
+data:
+  WORDPRESS_DB_HOST: wordpress-db-svc.ws4.svc.cluster.local
+  WORDPRESS_DB_USER: user
+  # WORDPRESS_DB_PASSWORD: examplepass
+  WORDPRESS_DB_NAME: wordpressdb
+# ---
+# kind: PersistentVolumeClaim
+# apiVersion: v1
+
+# metadata:
+#    name: wordpress-pvc
+#    labels:
+#       name: wordpress-pvc
+#    annotations:
+#       volume.beta.kubernetes.io/storage-provisioner: provisioner
+
+# spec:
+#    accessModes:
+#    - ReadWriteOnce
+#    resources:
+#       requests:
+#          storage: 1Gi
+#    storageClassName: do-block-storage
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wordpress-sts
+  labels:
+    name: wordpress-sts
+spec:
+  selector:
+    matchLabels:
+      name: wordpress-po
+  replicas: 1
+  serviceName: wordpress-hsvc
+  volumeClaimTemplates:
+  - metadata:
+      name: wordpress-pvc
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: do-block-storage
+  template:
+    metadata:
+      name: wordpress-po
+      labels:
+        name: wordpress-po
+    spec:
+      # volumes: 
+      # - name: wordpress-vol
+      #   persistentVolumeClaim:
+      #     claimName: wordpress-pvc
+      containers:
+      - name: wordpress
+        image: wordpress
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+          - name: wordpress-pvc
+            mountPath: /var/www/html
+        envFrom:
+        - configMapRef:
+            name: wordpress-cm
+        - secretRef:
+            name: wordpress-secret
+        ports:
+        - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-svc
+  labels:
+    name: wordpress-svc
+spec:
+  type: ClusterIP
+  selector:
+    name: wordpress-po
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-hsvc
+  labels:
+    name: wordpress-hsvc
+spec:
+  clusterIP: None
+  selector:
+    name: wordpress-po
+  ports:
+  - port: 80
+    targetPort: 80
