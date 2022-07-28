@@ -1,0 +1,13 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bgg-default-ing
+  labels:
+    name: bgg-default-ing
+spec:
+  ingressClassName: nginx
+  defaultBackend:
+    service:
+      name: fortune-svc
+      port:
+        number: 3000

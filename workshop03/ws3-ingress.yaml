@@ -6,8 +6,9 @@ metadata:
   labels:
     name: bgg-ing
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    # nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    # nginx.ingress.kubernetes.io/defaultBackend: bggappv1-svc
 spec:
   ingressClassName: nginx
   defaultBackend:
@@ -16,22 +17,20 @@ spec:
       port:
         number: 80
   rules:
-  # - host: bgg-139.59.216.208-nip.io
-  # - host: bggv1
-    - http:
-        paths:
-        - path: /v1
-          pathType: Prefix
-          backend:
-            service:
-              name: bggappv1-svc
-              port:
-                number: 80
-        - path: /v2
-          pathType: Prefix
-          backend:
-            service:
-              name: bggappv2-svc
-              port:
-                number: 80
-  
+  - host: bgg-146.190.195.34.nip.io
+    http:
+      paths:
+      - path: /v1
+        pathType: Prefix
+        backend:
+          service:
+            name: bggappv1-svc
+            port:
+              number: 80
+      - path: /v2
+        pathType: Prefix
+        backend:
+          service:
+            name: bggappv2-svc
+            port:
+              number: 80
