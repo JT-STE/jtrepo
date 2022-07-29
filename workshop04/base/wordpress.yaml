@@ -1,25 +1,25 @@
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: wordpress-secret
-  labels:
-    name: wordpress-secret
-type: Opaque
-data:
-  WORDPRESS_DB_PASSWORD: Y2hhbmdlaXQ=
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: wordpress-cm
-  labels:
-    name: wordpress-cm
-data:
-  WORDPRESS_DB_HOST: wordpress-db-svc.ws4.svc.cluster.local
-  WORDPRESS_DB_USER: user
-  # WORDPRESS_DB_PASSWORD: examplepass
-  WORDPRESS_DB_NAME: wordpressdb
+# ---
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: wordpress-secret
+#   labels:
+#     name: wordpress-secret
+# type: Opaque
+# data:
+#   WORDPRESS_DB_PASSWORD: Y2hhbmdlaXQ=
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: wordpress-cm
+#   labels:
+#     name: wordpress-cm
+# data:
+#   WORDPRESS_DB_HOST: wordpress-db
+#   WORDPRESS_DB_USER: user
+#   # WORDPRESS_DB_PASSWORD: examplepass
+#   WORDPRESS_DB_NAME: wordpressdb
 # ---
 # kind: PersistentVolumeClaim
 # apiVersion: v1
@@ -78,11 +78,24 @@ spec:
         volumeMounts:
           - name: wordpress-pvc
             mountPath: /var/www/html
-        envFrom:
-        - configMapRef:
-            name: wordpress-cm
-        - secretRef:
-            name: wordpress-secret
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: wordpress-db-svc
+        - name: WORDPRESS_DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: wordpress-db-cm
+              key: MYSQL_DATABASE
+        - name: WORDPRESS_DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: wordpress-db-cm
+              key: MYSQL_USER
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-db-secret
+              key: MYSQL_PASSWORD
         ports:
         - containerPort: 80
 

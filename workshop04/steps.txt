@@ -1,13 +1,9 @@
 # using nginx-controller in ns ingress-nginx
 
-# create db
-kubectl apply -f wordpress-db.yaml -n ws4
+# tenant 1
+# in tenant 1 folder
+kubectl apply -k .
 
-# create app
-kubectl apply -f wordpress.yaml -n ws4
-
-# create ingress
-kubectl apply -f ws4-ingress.yaml -n ws4
-
-# create network policy
-kubectl apply -f network-policy.yaml -n ws4
+# tenant 2
+# in tenant 2 folder
+kubectl apply -k .
